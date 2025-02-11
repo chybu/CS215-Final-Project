@@ -11,6 +11,7 @@ def generateAdjacencyMatrix(vertices, weight, density):
         for j in range(i+1,vertices):
             if random.random() < density:
                 weight = random.randint(1, weight)
+                #weight goes both ways.
                 adjMatrix[i][j] = weight
                 adjMatrix[j][i] = weight
     return adjMatrix
