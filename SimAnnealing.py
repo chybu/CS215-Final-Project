@@ -10,7 +10,7 @@ graph = [
 
 V = 4
 
-initial_temperature = 1000
+initial_temperature = 5000
 cooling_rate = 0.99  
 min_temperature = 1
 max_iterations = 50000 
@@ -26,28 +26,45 @@ def cost(path):
     return total_cost
 
 def generate_path(path):
-    if len(path) == 2:
-        return path
-    
-    new_path = path.copy()
-    
-    if random.random() < 0.5 and len(path) > 2:  # remove node
-        idx = random.randint(1, len(path) - 2) 
-        new_path.pop(idx) 
-    else:  # insert node
-        idx = random.randint(1, len(path) - 1)  
-        valid_nodes = [x for x in range(V) if graph[path[idx - 1]][x] != float('inf') and x not in path]
-        if valid_nodes:  
-            new_node = random.choice(valid_nodes)  
-            new_path.insert(idx, new_node)  
-        else:
-            return path  
-    
-    if cost(new_path) == float('inf'):
-        return path  # keep original path
-    
-    return new_path
+    if len(path) < 2:
+        return path  # Don't modify paths that are too short
 
+    new_path = path.copy()
+
+    # Start adding nodes until a valid path is found or no more valid nodes exist
+    while True:
+        # Select a random index for insertion
+        idx = random.randint(1, max(1, len(new_path) - 1))  # Ensures idx is valid
+
+        # Ensure idx is within range and path is not empty before accessing
+        if idx < len(new_path):
+            prev_node = new_path[idx - 1]
+        else:
+            return path  # Avoids out-of-range errors
+
+        # Find valid nodes that can be added to the path
+        valid_nodes = [x for x in range(V) if graph[prev_node][x] != float('inf') and x not in new_path]
+
+        if valid_nodes:
+            new_node = random.choice(valid_nodes)
+            new_path.insert(idx, new_node)
+            
+            # After adding the node, check if there are valid connections between consecutive nodes
+            valid = True
+            for i in range(len(new_path) - 1):
+                node1, node2 = new_path[i], new_path[i + 1]
+                if graph[node1][node2] == float('inf'):  # Invalid edge
+                    valid = False
+                    break
+
+            # If the path is valid, return it
+            if valid:
+                return new_path
+
+        # If there are no valid nodes to insert, return the original path
+        else:
+            return path
+        
 def simulated_annealing(start, end):
     if graph[start][end] != float('inf'):
         current_solution = [start, end] # start with path if valid
